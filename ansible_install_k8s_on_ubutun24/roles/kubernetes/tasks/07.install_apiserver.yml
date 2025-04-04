@@ -1,0 +1,100 @@
+# create directories
+- name: mkdir /etc/kubernetes/manifests/
+  file:
+    path: /etc/kubernetes/manifests/
+    state: directory
+- name: mkdir /etc/systemd/system/kubelet.service.d/
+  file:
+    path: /etc/systemd/system/kubelet.service.d/
+    state: directory
+- name: mkdir /var/lib/kubelet/
+  file:
+    path: /var/lib/kubelet/
+    state: directory
+- name: mkdir /var/log/kubernetes/
+  file:
+    path: /var/log/kubernetes/
+    state: directory
+- name: mkdir /usr/local/kubernetes/
+  file:
+    path: /usr/local/kubernetes/
+    state: directory
+
+# copy k8s certificate to nodes
+- name: copy scripts/cert/generate/k8s/ to /etc/kubernetes/pki/
+  copy:
+    src: scripts/cert/generate/k8s/
+    dest: /etc/kubernetes/pki/
+
+# install apiserver
+- name: copy kube-apiserver to /usr/local/kubernetes/
+  copy:
+    src: bin/kube-apiserver
+    dest: /usr/local/kubernetes/kube-apiserver
+    mode: "0755"
+- name: copy kube-apiserver.service.j2 to /usr/lib/systemd/system/
+  template:
+    src: kube-apiserver.service.j2
+    dest: /usr/lib/systemd/system/kube-apiserver.service
+
+# install kubectl
+- name: copy kubectl to /usr/local/bin/
+  copy:
+    src: bin/kubectl
+    dest: /usr/local/bin/
+    mode: "0755"
+- name: mkdir /root/.kube
+  file:
+    path: /root/.kube
+    state: directory
+- name: copy scripts/cert/generate/kubeconfigs/admin.kubeconfig to /root/.kube/config
+  copy:
+    src: scripts/cert/generate/kubeconfigs/admin.kubeconfig
+    dest: /root/.kube/config
+
+# start apiserver
+- name: systemctl daemon-reload
+  shell: systemctl daemon-reload
+- name: systemctl enable kube-apiserver
+  shell: systemctl enable kube-apiserver
+- name: systemctl restart kube-apiserver
+  shell: systemctl restart kube-apiserver
+
+# check apiserver
+- name: kubectl get cs
+  shell: /usr/local/bin/kubectl get cs
+  run_once: true
+  register: kubectl_get_cs
+- name: kubectl_get_cs.stdout_lines
+  run_once: true
+  debug:
+    var: kubectl_get_cs.stdout_lines
+
+
+# binding bootstrap token
+- name: copy bootstrap.secret.yaml to /root/
+  copy:
+    src: configs/bootstrap.secret.yaml
+    dest: /root/bootstrap.secret.yaml
+- name: bash scripts/binding_bootstrap_token.sh
+  script: scripts/binding_bootstrap_token.sh
+  register: bootstrap_stdout
+  run_once: true
+- name: print bootstrap stdout
+  debug:
+    var: bootstrap_stdout.stdout_lines
+
+# 安装 bash-completion
+- name: install bash-completion
+  apt:
+    name: bash-completion
+    state: present
+- name: install bash-completion
+  script: scripts/install_bash-completion.sh
+
+
+# 创建 /root/kubectlok 文件
+- name: create kubectlok file
+  file:
+    path: /root/.state/kubectlok
+    state: touch

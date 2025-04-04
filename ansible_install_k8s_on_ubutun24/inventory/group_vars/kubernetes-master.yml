@@ -1,0 +1,15 @@
+---
+# SSL 证书相关变量
+COMMON_WILDCARD_DOMAIN_NAME: '*.k8s.local'
+COMMON_LOAD_BALANCE_HOSTNAME: 'master.k8s.local'
+COMMON_LOAD_BALANCE_PORT: '8443'
+COMMON_K8S_IPS: '192.168.0.121,192.168.0.122,192.168.0.123,192.168.0.129,'
+
+# Keepalived 配置
+keepalived_master: 'master01.k8s.local'
+keepalived_vip: '192.168.0.129'
+keepalived_vip_netmask: '24'
+keepalived_router_id: '108'
+
+# etcd 配置
+etcd_version: '3.5.17'

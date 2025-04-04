@@ -1,0 +1,37 @@
+# install scheduler
+- name: copy kube-scheduler to /usr/local/kubernetes/
+  copy:
+    src: bin/kube-scheduler
+    dest: /usr/local/kubernetes/kube-scheduler
+    mode: "0755"
+- name: copy scheduler.kubeconfig to /etc/kubernetes/
+  copy:
+    src: scripts/cert/generate/kubeconfigs/scheduler.kubeconfig
+    dest: /etc/kubernetes/scheduler.kubeconfig
+- name: copy kube-scheduler.service.j2 to /usr/lib/systemd/system/
+  template:
+    src: kube-scheduler.service.j2
+    dest: /usr/lib/systemd/system/kube-scheduler.service
+
+# start scheduler
+- name: systemctl daemon-reload
+  shell: systemctl daemon-reload
+- name: systemctl enable kube-scheduler.service
+  shell: systemctl enable kube-scheduler.service
+- name: systemctl restart kube-scheduler.service
+  shell: systemctl restart kube-scheduler.service
+
+# check cluster status
+- name: kubectl get cs
+  shell: /usr/local/bin/kubectl get cs
+  run_once: true
+  register: kubectl_get_cs
+- name: kubectl_get_cs.stdout_lines
+  run_once: true
+  debug:
+    var: kubectl_get_cs.stdout_lines
+
+- name: create schedulerok file
+  file:
+    path: /root/.state/schedulerok
+    state: touch

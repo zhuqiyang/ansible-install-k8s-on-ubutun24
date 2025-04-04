@@ -1,0 +1,27 @@
+# install controller-manager
+- name: copy kube-controller-manager to /usr/local/kubernetes/
+  copy:
+    src: bin/kube-controller-manager
+    dest: /usr/local/kubernetes/
+    mode: "0755"
+- name: copy controller-manager.kubeconfig to /etc/kubernetes/
+  copy:
+    src: scripts/cert/generate/kubeconfigs/controller-manager.kubeconfig
+    dest: /etc/kubernetes/controller-manager.kubeconfig
+- name: copy kube-controller-manager.service.j2 to /usr/lib/systemd/system/
+  template:
+    src: kube-controller-manager.service.j2
+    dest: /usr/lib/systemd/system/kube-controller-manager.service
+
+# start controller-manager
+- name: systemctl daemon-reload
+  shell: systemctl daemon-reload
+- name: systemctl enable kube-controller-manager.service
+  shell: systemctl enable kube-controller-manager.service
+- name: systemctl restart kube-controller-manager.service
+  shell: systemctl restart kube-controller-manager.service
+
+- name: create controller-managerok file
+  file:
+    path: /root/.state/controller-managerok
+    state: touch

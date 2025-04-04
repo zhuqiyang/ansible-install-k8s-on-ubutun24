@@ -1,0 +1,147 @@
+- name: 检查 certok 文件是否存在
+  stat:
+    path: /root/.state/certok
+  register: certok_result
+  no_log: true
+
+- name: 本地执行脚本
+  include_tasks: 01.local_exec.yml
+  when: not certok_result.stat.exists
+
+
+- name: 检查 initok 文件是否存在
+  stat:
+    path: /root/.state/initok
+  register: initok_result
+  no_log: true
+
+- name: 如果 initok 文件不存在，则初始化系统
+  include_tasks: 02.init_system.yml
+  when: not initok_result.stat.exists
+
+# - name: 安装 containerd
+#   include_tasks: 03.1.install_containerd.yml
+
+
+- name: 检查 dockerok 文件是否存在
+  stat:
+    path: /root/.state/dockerok
+  register: dockerok_result
+  no_log: true
+
+- name: 安装docker
+  include_tasks: 03.2.install_docker.yml
+  when: not dockerok_result.stat.exists
+
+
+# 检查 etcdok 文件是否存在
+- name: 检查 etcdok 文件是否存在
+  stat:
+    path: /root/.state/etcdok
+  register: etcdok_result
+  no_log: true
+
+# 安装etcd
+- name: 安装etcd
+  include_tasks: 04.install_etcd.yml
+  when: not etcdok_result.stat.exists
+
+
+# 检查 keepalivedok 文件是否存在
+- name: 检查 keepalivedok 文件是否存在
+  stat:
+    path: /root/.state/keepalivedok
+  register: keepalivedok_result
+  no_log: true
+
+# 安装 keepalived
+- name: 安装 keepalived
+  include_tasks: 05.install_keepalived.yml
+  when: not keepalivedok_result.stat.exists
+
+
+# 检查 haproxyok 文件是否存在
+- name: 检查 haproxyok 文件是否存在
+  stat:
+    path: /root/.state/haproxyok
+  register: haproxyok_result
+  no_log: true
+
+# 安装 haproxy
+- name: 安装 haproxy
+  include_tasks: 06.install_haproxy.yml
+  when: not haproxyok_result.stat.exists
+
+
+- name: 检查 kubectlok 文件是否存在
+  stat:
+    path: /root/.state/kubectlok
+  register: kubectlok_result
+  no_log: true
+
+- name: 安装 apiserver
+  include_tasks: 07.install_apiserver.yml
+  when: not kubectlok_result.stat.exists
+
+
+- name: 检查 controller-managerok 文件是否存在
+  stat:
+    path: /root/.state/controller-managerok
+  register: controller_managerok_result
+  no_log: true
+
+- name: 安装 controller-manager
+  include_tasks: 08.install_controller_manager.yml
+  when: not controller_managerok_result.stat.exists
+
+
+- name: 检查 schedulerok 文件是否存在
+  stat:
+    path: /root/.state/schedulerok
+  register: schedulerok_result
+  no_log: true
+
+- name: 安装 scheduler
+  include_tasks: 09.install_scheduler.yml
+  when: not schedulerok_result.stat.exists
+
+
+- name: 检查 kubeletok 文件是否存在
+  stat:
+    path: /root/.state/kubeletok
+  register: kubeletok_result
+  no_log: true
+
+- name: 安装 kubelet
+  include_tasks: 10.1.install_kubelet_docker.yml
+  when: not kubeletok_result.stat.exists
+
+
+- name: 检查 kube-proxyok 文件是否存在
+  stat:
+    path: /root/.state/kube-proxyok
+  register: kube_proxyok_result
+  no_log: true
+
+- name: 安装 kube-proxy
+  include_tasks: 11.install_kube_proxy.yml
+  when: not kube_proxyok_result.stat.exists
+
+
+- name: 检查 addonsok 文件是否存在
+  stat:
+    path: /root/.state/addonsok
+  register: addonsok_result
+  no_log: true
+
+- name: 安装 addons
+  include_tasks: 12.install_addons.yml
+  when: not addonsok_result.stat.exists
+
+- name: 创建 k8sok 文件
+  file:
+    path: /root/.state/k8sok
+    state: touch
+    mode: '0644'
+    owner: root
+    group: root

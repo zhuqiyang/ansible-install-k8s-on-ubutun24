@@ -1,0 +1,50 @@
+# create directories
+- name: mkdir /var/lib/kubelet
+  file:
+    path: /var/lib/kubelet
+    state: directory
+- name: mkdir /var/log/kubernetes
+  file:
+    path: /var/log/kubernetes
+    state: directory
+- name: mkdir /etc/systemd/system/kubelet.service.d/
+  file:
+    path: /etc/systemd/system/kubelet.service.d/
+    state: directory
+- name: mkdir /etc/kubernetes/manifests/
+  file:
+    path: /etc/kubernetes/manifests/
+    state: directory
+
+# install kubelet
+- name: copy kubelet to /usr/local/kubernetes/
+  copy:
+    src: bin/kubelet
+    dest: /usr/local/kubernetes/
+    mode: "0755"
+- name: copy kubelet.service.docker.j2 to /usr/lib/systemd/system/
+  template:
+    src: kubelet.service.docker.j2
+    dest: /usr/lib/systemd/system/kubelet.service
+- name: copy kubelet-conf.yml.j2 to /etc/kubernetes/
+  template:
+    src: kubelet-conf.yml.j2
+    dest: /etc/kubernetes/kubelet-conf.yml
+- name: copy bootstrap-kubelet.kubeconfig /etc/kubernetes/
+  copy:
+    src: scripts/cert/generate/kubeconfigs/bootstrap-kubelet.kubeconfig
+    dest: /etc/kubernetes/
+
+# start kubelet
+- name: systemctl daemon-reload
+  shell: systemctl daemon-reload
+- name: systemctl enable kubelet.service
+  shell: systemctl enable kubelet.service
+- name: systemctl restart kubelet.service
+  shell: systemctl restart kubelet.service
+
+# create kubeletok file
+- name: create kubeletok file
+  file:
+    path: /root/.state/kubeletok
+    state: touch

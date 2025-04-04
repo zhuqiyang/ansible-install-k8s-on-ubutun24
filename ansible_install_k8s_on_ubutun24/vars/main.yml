@@ -1,0 +1,37 @@
+---
+# 这两个大写的变量是用在生成ssl证书的脚本里的
+# 泛域名，用于生成证书
+COMMON_WILDCARD_DOMAIN_NAME: '*.k8s.local'
+# keepalived 的 vip 或域名
+COMMON_LOAD_BALANCE_HOSTNAME: 'master.k8s.local'
+# 高可用ip的端口或域名的端口
+COMMON_LOAD_BALANCE_PORT: '8443'
+
+# 容器运行时 docker or containerd
+container_runtime: 'docker'
+# docker 数据存储目录，默认在/var/lib/docker目录
+docker_data_root: '/var/lib/docker'
+
+# 设置 keepalived 的 master 节点
+keepalived_master: 'master01.k8s.local'
+# keepalived vip
+keepalived_vip: '192.168.0.159'
+# keepalived vip netmask
+keepalived_vip_netmask: '24'
+# keepalived vrrp router id
+keepalived_router_id: '108'
+# 时间同步服务器
+time_server_address: 'ntp.aliyun.com'
+
+# Pod网络 '172.16.0.0/12' or '10.244.0.0/16'
+pod_network: '10.244.0.0/16'
+# service 网络
+service_network: '172.16.0.0/16'
+# k8s内部dns ip地址，coredns ip address
+dns_clusterip: '172.16.0.10'
+
+# 镜像仓库harbor的地址
+harbor_hostname: 'harbor.k8s.local'
+
+# k8s所有节点的IP，用于写入到证书中，多个IP使用逗号分格
+COMMON_K8S_IPS: '192.168.0.121,192.168.0.122,192.168.0.123'

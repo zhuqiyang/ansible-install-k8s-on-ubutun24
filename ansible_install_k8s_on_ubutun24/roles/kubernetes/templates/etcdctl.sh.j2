@@ -1,0 +1,1 @@
+alias etcdctl="etcdctl --endpoints='{{ etcd01_hostname }}:2379,{{ etcd02_hostname }}:2379,{{ etcd03_hostname }}:2379' --cacert=/etc/etcd/ssl/etcd-ca.pem --cert=/etc/etcd/ssl/etcd.pem --key=/etc/etcd/ssl/etcd-key.pem"

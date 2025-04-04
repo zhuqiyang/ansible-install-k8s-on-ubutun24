@@ -1,0 +1,78 @@
+# make directories
+- name: mkdir /etc/etcd/
+  file:
+    path: /etc/etcd/
+    state: directory
+- name: mkdir /var/lib/etcd/
+  file:
+    path: /var/lib/etcd/
+    state: directory
+- name: mkdir /var/lib/etcd/wal/
+  file:
+    path: /var/lib/etcd/wal/
+    state: directory
+- name: mkdir /etc/etcd/ssl/
+  file:
+    path: /etc/etcd/ssl/
+    state: directory
+
+# copy certificate to nodes
+- name: copy certificate to /etc/etcd/ssl
+  copy:
+    src: scripts/cert/generate/etcd/
+    dest: /etc/etcd/ssl/
+
+# copy binary to nodes
+- name: copy etcd to /usr/local/bin/etcd
+  copy:
+    src: packages/etcd-v{{ etcd_version }}-linux-amd64/etcd
+    dest: /usr/local/bin/
+    mode: "0755"
+- name: copy etcdctl to /usr/local/bin/etcdctl
+  copy:
+    src: packages/etcd-v{{ etcd_version }}-linux-amd64/etcdctl
+    dest: /usr/local/bin/
+    mode: "0755"
+- name: copy etcdutl to /usr/local/bin/etcdutl
+  copy:
+    src: packages/etcd-v{{ etcd_version }}-linux-amd64/etcdutl
+    dest: /usr/local/bin/
+    mode: "0755"
+
+# config etcd
+- name: copy etcd.config.yml.j2 to /etc/etcd/etcd.config.yml
+  template:
+    src: etcd.config.yml.j2
+    dest: /etc/etcd/etcd.config.yml
+- name: copy etcd.service.j2 to /usr/lib/systemd/system/etcd.service
+  template:
+    src: etcd.service.j2
+    dest: /usr/lib/systemd/system/etcd.service
+
+- name: systemctl daemon-reload
+  shell: systemctl daemon-reload
+- name: systemctl enable --now etcd
+  shell: systemctl enable --now etcd
+
+# check if the etcd is ok
+- name: copy etcdctl.sh.j2 to /etc/profile.d/
+  template:
+    src: etcdctl.sh.j2
+    dest: /etc/profile.d/etcdctl.sh
+- name: /usr/local/bin/etcdctl endpoint status --write-out=table
+  shell: /usr/local/bin/etcdctl --endpoints='{{ etcd01_hostname }}:2379,{{ etcd02_hostname }}:2379,{{ etcd03_hostname }}:2379' --cacert=/etc/etcd/ssl/etcd-ca.pem --cert=/etc/etcd/ssl/etcd.pem --key=/etc/etcd/ssl/etcd-key.pem endpoint status --write-out=table
+  register: etcdctl_result
+  no_log: true
+  run_once: true
+- name: etcdctl_result
+  run_once: true
+  debug:
+    var: etcdctl_result.stdout_lines
+
+- name: etcdok
+  file:
+    path: /root/.state/etcdok
+    state: touch
+    mode: 0644
+    owner: root
+    group: root

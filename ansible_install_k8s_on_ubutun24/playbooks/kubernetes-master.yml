@@ -1,0 +1,9 @@
+- name: 安装 kubernetes master
+  hosts: kubernetes-master
+  remote_user: root
+  any_errors_fatal: true
+  become: yes
+  roles:
+    - kubernetes
+  vars:
+  - install_type: 'master'

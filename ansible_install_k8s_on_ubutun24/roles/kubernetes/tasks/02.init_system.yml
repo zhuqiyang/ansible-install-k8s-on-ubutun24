@@ -1,0 +1,369 @@
+# 复制 sources.list 到 /etc/apt/sources.list
+- name: 复制 sources.list 到 /etc/apt/sources.list
+  copy:
+    src: configs/sources.list
+    dest: /etc/apt/sources.list
+    mode: 0644
+    owner: root
+    group: root
+- name: apt update
+  apt:
+    update_cache: true
+
+# apt install -y ipset ipvsadm
+- name: apt install -y ipset ipvsadm
+  apt:
+    name:
+      - ipset
+      - ipvsadm
+    state: present
+  no_log: true
+
+
+# 安装 chronyd
+- name: 安装 chronyd
+  package:
+    name: chrony
+    state: present
+  register: chrony_install_result
+  no_log: true
+- name: 停止 chronyd
+  shell: systemctl stop chronyd
+  no_log: true
+
+- name: 配置 chronyd
+  shell: chronyd -q 'server {{ time_server_address }} iburst'
+  register: chrony_config_result
+- name: 打印 chrony 配置结果
+  debug:
+    var: chrony_config_result.stdout_lines
+
+- name: 开启 chronyd
+  shell: systemctl start chronyd
+  no_log: true
+- name: 设置 chronyd 开机自启动
+  systemd:
+    name: chrony
+    state: started
+    enabled: yes
+  register: chrony_enable_result
+  no_log: true
+
+
+# 根据 inventory/kubernetes 中的主机名设置主机名
+- name: 设置主机名
+  hostname:
+    name: "{{ inventory_hostname }}"
+    use: systemd
+
+# 复制 50-cloud-init.yaml 到 /etc/netplan/
+- name: copy 50-cloud-init.yaml to /etc/netplan/
+  copy:
+    src: configs/50-cloud-init.yaml
+    dest: /etc/netplan/50-cloud-init.yaml
+    mode: 0644
+    owner: root
+    group: root
+
+- name: 重启网络 netplan apply
+  shell: netplan apply
+  no_log: true
+
+
+# 查看主机名
+- name: 查看主机名
+  command: hostname
+  register: hostname_result
+  no_log: true
+- name: 打印主机名
+  debug:
+    var: hostname_result.stdout_lines
+
+# 永久设置主机名
+- name: 永久设置主机名
+  lineinfile:
+    path: /etc/hostname
+    regexp: "^127.0.0.1"
+    line: "127.0.0.1 {{ inventory_hostname }}"
+    state: present
+# 设置 hosts 文件
+- name: 设置 hosts 文件
+  lineinfile:
+    path: /etc/hosts
+    regexp: "^127.0.0.1"
+    line: "127.0.0.1 {{ inventory_hostname }}"
+    state: present
+
+
+# 查看/etc/hostname 文件
+- name: 查看/etc/hostname 文件
+  command: cat /etc/hostname
+  register: hostname_result
+  no_log: true
+- name: 打印/etc/hostname 文件
+  debug:
+    var: hostname_result.stdout_lines
+
+
+# 查看/etc/hosts 文件
+- name: 查看/etc/hosts 文件
+  command: cat /etc/hosts
+  register: hosts_result
+  no_log: true
+- name: 打印/etc/hosts 文件
+  debug:
+    var: hosts_result.stdout_lines
+
+
+- name: 关闭 ufw 防火墙
+  command: ufw disable
+  register: ufw_disable_result
+  no_log: true
+# ufw 防火墙
+- name: 查看 ufw 防火墙状态
+  command: ufw status
+  register: ufw_status_result
+  no_log: true
+- name: 打印 ufw 防火墙状态
+  debug:
+    var: ufw_status_result.stdout_lines
+
+
+# 关闭 AppArmor
+- name: 检查 AppArmor 是否已安装
+  package:
+    name: apparmor
+    state: present
+  when: ansible_os_family == "Debian"
+- name: 停止 AppArmor 服务
+  service:
+    name: apparmor
+    state: stopped
+    enabled: no
+  when: ansible_os_family == "Debian"
+  no_log: true
+- name: 禁用 AppArmor 内核模块
+  lineinfile:
+    path: /etc/modprobe.d/blacklist.conf
+    line: "blacklist apparmor"
+    state: present
+  when: ansible_os_family == "Debian"
+
+
+- name: 更新内核模块
+  command: update-initramfs -u
+  when: ansible_os_family == "Debian"
+  no_log: true
+- name: 打印更新内核模块
+  debug:
+    var: update_initramfs_result.stdout_lines
+
+
+# ubuntu 永久关闭 swap
+- name: 永久关闭 swap,将 /swap.img 这一行注释
+  lineinfile:
+    path: /etc/fstab
+    regexp: "^/swap.img"
+    line: "#/swap.img     none    swap    sw      0       0"
+    state: present
+  when: ansible_os_family == "Debian"
+# 关闭swap
+- name: 关闭swap
+  command: swapoff -a
+  register: swapoff_result
+  no_log: true
+# 设置 vm.swappiness=0
+- name: 设置 vm.swappiness=0
+  command: sysctl -w vm.swappiness=0
+  register: sysctl_result
+  no_log: true
+- name: 打印 sysctl 结果
+  debug:
+    var: sysctl_result.stdout_lines
+# 查看 fstab 文件
+- name: 查看 fstab 文件
+  command: cat /etc/fstab
+  register: fstab_result
+  no_log: true
+- name: 打印 fstab 文件
+  debug:
+    var: fstab_result.stdout_lines
+
+
+# 查看 swap 状态
+- name: 查看 swap 状态
+  command: swapon --show
+  register: swapon_result
+  no_log: true
+- name: 打印 swap 状态
+  debug:
+    var: swapon_result.stdout_lines
+
+# 设置 limits.conf
+- name: 设置 limits.conf
+  copy:
+    src: configs/limits.conf
+    dest: /etc/security/limits.conf
+    mode: 0644
+    owner: root
+    group: root
+
+# 设置内核参数
+- name: 设置内核参数
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: "^net.ipv4.ip_forward"
+    line: "net.ipv4.ip_forward = 1"
+    state: present
+# 查看内核参数
+- name: 查看内核参数
+  command: sysctl -p
+  register: sysctl_result
+  no_log: true
+- name: 打印内核参数
+  debug:
+    var: sysctl_result.stdout_lines
+
+
+# 设置时区为上海
+- name: 设置时区为上海
+  command: timedatectl set-timezone Asia/Shanghai
+  no_log: true
+- name: 查看时区
+  command: timedatectl status
+  register: timedatectl_result
+  no_log: true
+- name: 打印时区
+  debug:
+    var: timedatectl_result.stdout_lines
+
+#安装 conntrack
+- name: 安装 conntrack
+  package:
+    name: conntrack
+    state: present
+  no_log: true
+
+# load ipvs modules
+- name: copy configs/ipvs.conf to /etc/modules-load.d/ipvs.conf
+  copy:
+    src: configs/ipvs.conf
+    dest: /etc/modules-load.d/ipvs.conf
+    mode: 0644
+    owner: root
+    group: root
+
+# 复制 k8s.conf 到 /etc/sysctl.d/
+- name: 复制 k8s.conf 到 /etc/sysctl.d/
+  copy:
+    src: configs/k8s.conf
+    dest: /etc/sysctl.d/k8s.conf
+    mode: 0644
+    owner: root
+    group: root
+  no_log: true
+
+# 复制 99-kubernetes-cri.conf 到 /etc/sysctl.d/
+- name: 复制 99-kubernetes-cri.conf 到 /etc/sysctl.d/
+  copy:
+    src: configs/99-kubernetes-cri.conf
+    dest: /etc/sysctl.d/99-kubernetes-cri.conf
+    mode: 0644
+    owner: root
+    group: root
+
+# 重启 sysctl
+- name: 重启 sysctl
+  shell: sysctl -p
+  no_log: true
+
+# copy configs/containerd.conf to /etc/modules-load.d/
+- name: 复制 containerd.conf 到 /etc/modules-load.d/
+  copy:
+    src: configs/containerd.conf
+    dest: /etc/modules-load.d/containerd.conf
+    mode: 0644
+    owner: root
+    group: root
+
+# 重启 systemd-modules-load.service
+- name: 重启 systemd-modules-load.service
+  shell: systemctl restart systemd-modules-load.service
+  no_log: true
+
+# 安装 libseccomp
+- name: apt install libseccomp2
+  apt:
+    name: libseccomp2
+    state: present
+  register: libseccomp_install_result
+  no_log: true
+- name: 打印 libseccomp 安装结果
+  debug:
+    var: libseccomp_install_result
+
+# 安装 socat (cri-dockerd 需要)
+- name: apt install socat
+  apt:
+    name: socat
+    state: present
+  no_log: true
+
+# cp hosts.j2 to /etc/hosts
+- name: 复制 hosts.j2 到 /etc/hosts
+  template:
+    src: templates/hosts.j2
+    dest: /etc/hosts
+    mode: 0644
+    owner: root
+    group: root
+
+
+# create directories
+- name: mkdir /etc/kubernetes/manifests/
+  file:
+    path: /etc/kubernetes/manifests/
+    state: directory
+- name: mkdir /etc/systemd/system/kubelet.service.d/
+  file:
+    path: /etc/systemd/system/kubelet.service.d/
+    state: directory
+- name: mkdir /var/lib/kubelet/
+  file:
+    path: /var/lib/kubelet/
+    state: directory
+- name: mkdir /var/log/kubernetes/
+  file:
+    path: /var/log/kubernetes/
+    state: directory
+- name: mkdir /usr/local/kubernetes/
+  file:
+    path: /usr/local/kubernetes/
+    state: directory
+# copy k8s certificate to nodes
+- name: copy scripts/cert/generate/k8s/ to /etc/kubernetes/pki/
+  copy:
+    src: scripts/cert/generate/k8s/
+    dest: /etc/kubernetes/pki/
+
+
+- name: 在/root/目录下创建 .state 目录
+  file:
+    path: /root/.state
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: 在/root/目录下创建 initok 文件
+  file:
+    path: /root/.state/initok
+    state: touch
+    mode: 0644
+    owner: root
+    group: root
+
+# reboot
+- name: 重启
+  shell: reboot
+  no_log: true

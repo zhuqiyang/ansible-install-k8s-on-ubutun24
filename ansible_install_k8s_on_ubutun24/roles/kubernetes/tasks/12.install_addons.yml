@@ -1,0 +1,23 @@
+# delete 10-containerd-net.conflist
+# If the Pod IP shows 10.88.0.0, remove the file /etc/cni/net.d/10-containerd-net.conflist, 
+# please refer to https://zhuanlan.zhihu.com/p/608369342
+- name: delete /etc/cni/net.d/10-containerd-net.conflist
+  file:
+    path: /etc/cni/net.d/10-containerd-net.conflist
+    state: absent
+
+
+- name: 安装 addons
+  copy:
+    src: scripts/addons/
+    dest: /root/addons/
+
+- name: 设置 addons 变量
+  template:
+    src: addon_vars.sh.j2
+    dest: /root/addons/addon_vars.sh
+
+- name: 创建 addonsok 文件
+  file:
+    path: /root/.state/addonsok
+    state: touch

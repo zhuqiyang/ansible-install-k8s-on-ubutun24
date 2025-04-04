@@ -1,0 +1,42 @@
+- name: 检查 initok 文件是否存在
+  stat:
+    path: /root/.state/initok
+  register: initok_result
+  no_log: true
+
+- name: 如果 initok 文件不存在，则初始化系统
+  include_tasks: 02.init_system.yml
+  when: not initok_result.stat.exists
+
+
+- name: 检查 dockerok 文件是否存在
+  stat:
+    path: /root/.state/dockerok
+  register: dockerok_result
+  no_log: true
+
+- name: 安装docker
+  include_tasks: 03.2.install_docker.yml
+  when: not dockerok_result.stat.exists
+
+
+- name: 检查 kubeletok 文件是否存在
+  stat:
+    path: /root/.state/kubeletok
+  register: kubeletok_result
+  no_log: true
+
+- name: 安装 kubelet
+  include_tasks: 10.1.install_kubelet_docker.yml
+  when: not kubeletok_result.stat.exists
+
+
+- name: 检查 kube-proxyok 文件是否存在
+  stat:
+    path: /root/.state/kube-proxyok
+  register: kube_proxyok_result
+  no_log: true
+
+- name: 安装 kube-proxy
+  include_tasks: 11.install_kube_proxy.yml
+  when: not kube_proxyok_result.stat.exists

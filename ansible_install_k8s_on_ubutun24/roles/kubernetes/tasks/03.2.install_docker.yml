@@ -1,0 +1,131 @@
+#检查/proc/1/ns/cgroup是否存在
+- name: 检查/proc/1/ns/cgroup是否存在
+  shell: if [ -f /proc/1/ns/cgroup ]; then echo 'cgroup /proc/1/ns/cgroup exists'; else echo 'cgroup /proc/1/ns/cgroup not exists';exit 1; fi
+
+
+# 将 packages/cni-plugins-linux-amd64-v{{ cni_version }}.tgz 解压到远程的 /opt/cni/bin/ 目录
+- name: 创建 CNI 目录
+  file:
+    path: /opt/cni/bin
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: 复制并解压 CNI 插件包
+  unarchive:
+    src: packages/cni-plugins-linux-amd64-v{{ cni_version }}.tgz
+    dest: /opt/cni/bin
+    remote_src: no
+    mode: 0755
+    owner: root
+    group: root
+
+# 检查docker是否安装
+- name: 检查docker是否安装
+  shell: if [ -f /usr/bin/docker ]; then echo 'docker installed'; else echo 'docker not installed'; fi
+  register: docker_check_result
+  ignore_errors: true
+
+# 安装docker
+- name: 安装docker
+  shell: apt install docker.io -y
+  when: "'docker not installed' in docker_check_result.stdout"
+  no_log: true
+
+# 创建docker数据目录
+- name: mkdir "{{ docker_data_root }}" -pv
+  file:
+    path: "{{ docker_data_root }}"
+    state: directory
+  when: docker_data_root is defined and docker_data_root | length > 0
+
+# 复制daemon.json.j2到/etc/docker/daemon.json
+- name: copy daemon.json.j2 to /etc/docker/daemon.json
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: 0644
+    owner: root
+    group: root
+
+- name: copy docker.socket to /usr/lib/systemd/system/docker.socket
+  template:
+    src: docker.socket.j2
+    dest: /usr/lib/systemd/system/docker.socket
+    mode: 0644
+    owner: root
+    group: root
+
+# 开机启动docker
+- name: 开机启动docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  no_log: true
+
+# systemctl status docker.service
+- name: systemctl status docker.service
+  shell: systemctl status docker.service
+  register: docker_status_result
+  no_log: true
+# 打印docker状态(命令 systemctl status docker.service)
+- name: 打印docker状态
+  debug:
+    var: docker_status_result.stdout_lines
+
+# docker info
+- name: docker info
+  shell: docker info
+  register: docker_info_result
+  no_log: true
+# 打印docker info
+- name: 打印docker info
+  debug:
+    var: docker_info_result.stdout_lines
+
+# 复制cri-dockerd到/usr/local/bin/
+- name: 复制cri-dockerd到/usr/local/bin/
+  copy:
+    src: bin/cri-dockerd
+    dest: /usr/local/bin/cri-dockerd
+    mode: 0755
+    owner: root
+    group: root
+
+- name: copy cri-docker.service.j2 to /usr/lib/systemd/system/cri-docker.service
+  template:
+    src: cri-docker.service.j2
+    dest: /usr/lib/systemd/system/cri-docker.service
+    mode: 0644
+    owner: root
+    group: root
+
+- name: copy cri-docker.socket.j2 to /usr/lib/systemd/system/cri-docker.socket
+  template:
+    src: cri-docker.socket.j2
+    dest: /usr/lib/systemd/system/cri-docker.socket
+    mode: 0644
+    owner: root
+    group: root
+
+# systemctl status cri-docker.socket
+- name: systemctl enable --now cri-docker.socket
+  shell: systemctl enable --now cri-docker.socket
+
+# 开机启动cri-docker
+- name: 开机启动cri-docker
+  systemd:
+    name: cri-docker
+    state: started
+    enabled: yes
+  no_log: true
+
+- name: dockerok
+  file:
+    path: /root/.state/dockerok
+    state: touch
+    mode: 0644
+    owner: root
+    group: root

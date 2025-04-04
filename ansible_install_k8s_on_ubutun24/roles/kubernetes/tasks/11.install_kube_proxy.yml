@@ -1,0 +1,31 @@
+# install kube-proxy
+- name: copy kube-proxy to /usr/local/kubernetes/
+  copy:
+    src: bin/kube-proxy
+    dest: /usr/local/kubernetes/kube-proxy
+    mode: "0755"
+- name: kube-proxy.yaml.j2 to /etc/kubernetes/
+  template:
+    src: kube-proxy.yaml.j2
+    dest: /etc/kubernetes/kube-proxy.yaml
+- name: copy kube-proxy.kubeconfig to /etc/kubernetes/
+  copy:
+    src: scripts/cert/generate/kubeconfigs/kube-proxy.kubeconfig
+    dest: /etc/kubernetes/kube-proxy.kubeconfig
+- name: copy kube-proxy.service.j2 to /usr/lib/systemd/system/
+  template:
+    src: kube-proxy.service.j2
+    dest: /usr/lib/systemd/system/kube-proxy.service
+
+# start kube-proxy
+- name: systemctl daemon-reload
+  shell: systemctl daemon-reload
+- name: systemctl enable kube-proxy.service
+  shell: systemctl enable kube-proxy.service
+- name: systemctl restart kube-proxy.service
+  shell: systemctl restart kube-proxy.service
+
+- name: create kube-proxyok file
+  file:
+    path: /root/.state/kube-proxyok
+    state: touch

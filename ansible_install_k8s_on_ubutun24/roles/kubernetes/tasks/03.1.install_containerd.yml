@@ -1,0 +1,21 @@
+
+- name: 检查 containerd 是否安装
+  stat:
+    path: /run/containerd/containerd.sock
+  register: file_stat
+
+- name: 安装 containerd
+  apt:
+    name: containerd
+    state: present
+  when: not file_stat.stat.exists
+
+- name: 打印 containerd 安装结果
+  debug:
+    var: file_stat
+
+- name: 安装 containerd-cri
+  apt:
+    name: containerd-cri
+    state: present
+  when: not file_stat.stat.exists

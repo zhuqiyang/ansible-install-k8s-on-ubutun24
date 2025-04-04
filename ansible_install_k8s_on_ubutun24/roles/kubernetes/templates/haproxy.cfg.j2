@@ -1,0 +1,75 @@
+global
+    log /dev/log local0          # 适配新版日志路径，使用 local0
+    log /dev/log local1 notice  # 添加 notice 级别日志
+    chroot /var/lib/haproxy
+    pidfile /var/run/haproxy.pid
+    maxconn 4000
+    user haproxy
+    group haproxy
+    daemon
+
+    # 统计套接字配置（适配新版本路径和权限）
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+
+    # SSL 默认配置（来自新版模板）
+    ca-base /etc/ssl/certs
+    crt-base /etc/ssl/private
+    ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+    ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+
+defaults
+    mode http                   # 默认模式仍为 http
+    log global
+    option httplog
+    option dontlognull
+    option http-server-close    # 保持连接优化
+    option forwardfor except 127.0.0.0/8
+    option redispatch           # 会话重调度
+    retries 3                  # 重试次数
+    timeout http-request 10s    # 明确保留原有超时设置
+    timeout queue 1m
+    timeout connect 10s
+    timeout client 1m
+    timeout server 1m
+    timeout http-keep-alive 10s
+    timeout check 10s
+    maxconn 3000               # 默认最大连接数
+
+    # 错误页面配置（来自新版模板）
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
+
+# 管理统计页面配置（保持 listen 块结构）
+listen admin_stat
+    bind 0.0.0.0:8888
+    mode http                  # 明确指定模式
+    stats enable
+    stats refresh 30s
+    stats uri /haproxy_stats
+    stats realm "Haproxy Statistics"
+    stats auth admin:admin
+    stats hide-version
+
+# 前端 TCP 代理配置
+frontend main
+    bind *:8443
+    mode tcp
+    option tcplog             # TCP 日志记录
+    default_backend k8s
+
+# 后端 Kubernetes 集群配置
+backend k8s
+    mode tcp
+    option tcplog
+    option tcp-check          # TCP 健康检查
+    balance roundrobin
+    server master01 {{ master01_hostname }}:6443 check
+    server master02 {{ master02_hostname }}:6443 check
+    server master03 {{ master03_hostname }}:6443 check

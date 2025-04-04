@@ -1,0 +1,16 @@
+- name: 检查 k8sok 文件是否存在
+  stat:
+    path: /root/.state/k8sok
+  register: k8sok_result
+  no_log: true
+
+# install kubernetes master
+- name: install master
+  include_tasks: install_master.yml
+  when: install_type == "master" and not k8sok_result.stat.exists
+
+
+# install kubernetes work nodes
+- name: install nodes
+  include_tasks: install_node.yml
+  when: install_type == "node"

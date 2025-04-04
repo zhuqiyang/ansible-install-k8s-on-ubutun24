@@ -1,0 +1,45 @@
+# 打印当前目录
+- name: show current directory
+  delegate_to: 127.0.0.1
+  run_once: true
+  shell: pwd
+  register: pwd_stdout
+- name: print pwd result
+  run_once: true
+  debug:
+    var: pwd_stdout.stdout_lines
+
+- name: copy ssl_vars.sh.j2 to {{ pwd_stdout.stdout }}/roles/kubernetes/files/scripts/cert/ssl_vars.sh
+  delegate_to: 127.0.0.1
+  run_once: true
+  template:
+    src: ssl_vars.sh.j2
+    dest: "../roles/kubernetes/files/scripts/cert/ssl_vars.sh"
+
+# 本地执行脚本
+- name: 本地执行脚本
+  shell: cd {{ pwd_stdout.stdout }} && cd .. && cd roles/kubernetes/files/scripts/cert && bash create_certs_kubeconfigs.sh
+  run_once: true
+  delegate_to: 127.0.0.1
+  register: create_certs_kubeconfigs_result
+  no_log: true
+- name: print create_certs_kubeconfigs_result
+  run_once: true
+  debug:
+    var: create_certs_kubeconfigs_result.stdout_lines
+
+- name: 在/root/目录下创建 .state 目录
+  file:
+    path: /root/.state
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: 在/root/.state/目录下创建 certok 文件
+  file:
+    path: /root/.state/certok
+    state: touch
+    mode: 0644
+    owner: root
+    group: root

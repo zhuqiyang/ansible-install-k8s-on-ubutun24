@@ -1,0 +1,47 @@
+# 检查 keepalived vip 是否被使用
+- name: ping keepalived_vip
+  shell: ping -c 1 {{ keepalived_vip }}; if [ $? -ne 0 ]; then exit 0; else exit 1; fi;
+  register: ping_result
+  delegate_to: 127.0.0.1
+  run_once: true
+  ignore_errors: true
+- name: keepalived vip not used
+  fail:
+    msg: "ip exists"
+  when: ping_result.failed
+
+# 安装 keepalived
+- name: install keepalived
+  apt:
+    name: keepalived
+    state: present
+  no_log: true
+
+# 配置 keepalived
+- name: configure keepalived
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+
+- name: copy keepalived.conf.j2 to /etc/keepalived/keepalived.conf
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+- name: copy check_port.sh /etc/keepalived/
+  copy:
+    src: scripts/check_port.sh
+    dest: /etc/keepalived/check_port.sh
+    mode: "0755"
+
+- name: systemctl enable keepalived.service --now
+  shell: systemctl enable keepalived.service --now
+
+- name: systemctl restart keepalived.service
+  shell: systemctl restart keepalived.service
+
+# keepalivedok 文件
+- name: create keepalivedok file
+  file:
+    path: /root/.state/keepalivedok
+    state: touch
+

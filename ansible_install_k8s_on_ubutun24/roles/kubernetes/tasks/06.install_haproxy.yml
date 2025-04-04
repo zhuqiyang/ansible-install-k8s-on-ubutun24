@@ -1,0 +1,26 @@
+# 安装 haproxy
+- name: install haproxy
+  apt:
+    name: haproxy
+    state: present
+  no_log: true
+
+# 配置 haproxy
+- name: configure haproxy
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+
+# 启动 haproxy
+- name: restart haproxy
+  shell: systemctl restart haproxy
+
+# 设置 haproxy 开机自启动
+- name: enable haproxy
+  shell: systemctl enable haproxy
+
+# haproxyok 文件
+- name: create haproxyok file
+  file:
+    path: /root/.state/haproxyok
+    state: touch

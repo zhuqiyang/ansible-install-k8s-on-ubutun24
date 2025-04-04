@@ -1,0 +1,19 @@
+{
+  {% if docker_data_root is defined %}
+  "data-root": "{{ docker_data_root }}",
+  {% endif %}
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "registry-mirrors": [
+    "https://84bkfzte.mirror.aliyuncs.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "http://hub-mirror.c.163.com"
+  ],
+  "insecure-registries":["http://{{ harbor_hostname }}"],
+  "max-concurrent-downloads": 10,
+  "log-driver": "json-file",
+  "log-level": "warn",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "3"
+    }
+}

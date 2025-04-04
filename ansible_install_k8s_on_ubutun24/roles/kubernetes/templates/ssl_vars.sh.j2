@@ -1,0 +1,10 @@
+#!/bash
+
+# 泛域名，用于生成证书
+export COMMON_WILDCARD_DOMAIN_NAME={{ COMMON_WILDCARD_DOMAIN_NAME }}
+# keepalived 的 vip 或域名
+export COMMON_LOAD_BALANCE_HOSTNAME={{ COMMON_LOAD_BALANCE_HOSTNAME }}
+# 高可用ip或域名的端口
+export COMMON_LOAD_BALANCE_PORT={{ COMMON_LOAD_BALANCE_PORT }}
+# k8s所有节点的IP，用于写入证书中，多个IP使用逗号分格
+export COMMON_K8S_IPS={{ COMMON_K8S_IPS }}
