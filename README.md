@@ -1,7 +1,13 @@
 # 在 ubutun24 server 系统中安装 Kubernetes 集群指南
 
 ## 前言
-> 这个是ansible-playbook脚本，用来在ubutun24系统中安装二进制kubernetes集群，集群采用3 master节点，若干个node节点，
+> 这个是ansible-playbook脚本，用来在ubutun24系统中安装二进制kubernetes集群，集群版本为 1.32，集群采用3 master节点，若干个node节点。
+
+### 集群及工具版本
+    都是ubutun24的默认版本。
+- kubernetes version 1.32
+- ansible version 2.16.3
+- python 3.12.3
 
 
 ## 1. 下载安装包
