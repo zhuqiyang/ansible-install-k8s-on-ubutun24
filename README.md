@@ -97,6 +97,7 @@ node01.k8s.local ansible_host=192.168.0.124
 ```
 
 ## 2. 下载安装包
+> 下载下载好后，脚本会将下载的二进制文件解压到对应的目录。
 ```bash
 cd download/
 bash -x download-kubernetes-binary.sh
@@ -157,4 +158,33 @@ bash 5.install_metrics-server.sh
 
 ```bash
 ansible-playbook -v -i inventory/kubernetes-master playbooks/kubernetes-master.yml
+```
+> 安装完成后查看节点状态。
+```bash
+kubectl get nodes
+NAME                 STATUS   ROLES    AGE   VERSION
+master01.k8s.local   Ready    <none>   15h   v1.32.2
+master02.k8s.local   Ready    <none>   15h   v1.32.2
+master03.k8s.local   Ready    <none>   15h   v1.32.2
+node01.k8s.local     Ready    <none>   14h   v1.32.2
+
+
+kubectl get pods -A
+NAMESPACE       NAME                                        READY   STATUS    RESTARTS   AGE
+ingress-nginx   ingress-nginx-controller-56d77cf468-tjhmc   1/1     Running   0          14h
+kube-system     cilium-drxk9                                1/1     Running   0          14h
+kube-system     cilium-envoy-bhk44                          1/1     Running   0          14h
+kube-system     cilium-envoy-fk7j9                          1/1     Running   0          14h
+kube-system     cilium-envoy-sz6mr                          1/1     Running   0          14h
+kube-system     cilium-envoy-wzqqq                          1/1     Running   0          14h
+kube-system     cilium-krgdl                                1/1     Running   0          14h
+kube-system     cilium-lsrxv                                1/1     Running   0          14h
+kube-system     cilium-operator-867c9dfcd8-mjc2k            1/1     Running   0          14h
+kube-system     cilium-xn58b                                1/1     Running   0          14h
+kube-system     coredns-6479c8484c-7qrn5                    1/1     Running   0          14h
+kube-system     coredns-6479c8484c-gdnxn                    1/1     Running   0          14h
+kube-system     hubble-relay-748c9cb769-t7wk9               1/1     Running   0          2m43s
+kube-system     hubble-ui-787458855d-k9hqp                  2/2     Running   0          14h
+kube-system     metrics-server-5f49dc98b9-sjg5j             1/1     Running   0          14h
+
 ```
