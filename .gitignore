@@ -7,4 +7,5 @@ ansible_install_k8s_on_ubutun24/roles/kubernetes/files/packages/**
 !ansible_install_k8s_on_ubutun24/roles/kubernetes/files/packages/README.md
 
 # 忽略 cert/generate 目录下所有内容
-ansible_install_k8s_on_ubutun24/roles/kubernetes/files/scripts/cert/generate/*
+ansible_install_k8s_on_ubutun24/roles/kubernetes/files/scripts/cert/generate/**
+!ansible_install_k8s_on_ubutun24/roles/kubernetes/files/scripts/cert/generate/.gitkeep
