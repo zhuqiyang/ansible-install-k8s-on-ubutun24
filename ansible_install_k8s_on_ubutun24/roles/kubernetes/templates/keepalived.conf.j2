@@ -30,7 +30,7 @@ vrrp_instance VI_1 {
     {% else %}
     state SLAVE
     {% endif %}
-    interface ens18
+    interface eth0
     virtual_router_id {{ keepalived_router_id }}
     priority 100
     advert_int 1
@@ -40,7 +40,7 @@ vrrp_instance VI_1 {
         auth_pass 123456789
     }
     virtual_ipaddress {
-        {{ keepalived_vip }}/{{ keepalived_vip_netmask }} dev ens18 label ens18:0
+        {{ keepalived_vip }}/{{ keepalived_vip_netmask }} dev eth0 label eth0:0
     }
     track_script {
         check_port

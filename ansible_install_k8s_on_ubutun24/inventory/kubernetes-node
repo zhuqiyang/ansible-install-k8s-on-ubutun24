@@ -2,5 +2,5 @@
 ansible_python_interpreter=/usr/bin/python3
 
 [kubernetes-node]
-node01.k8s.local ansible_host=192.168.0.124
-# node02.k8s.local ansible_host=192.168.0.125
+#node01.k8s.local ansible_host=192.168.0.124
+#node02.k8s.local ansible_host=192.168.0.125

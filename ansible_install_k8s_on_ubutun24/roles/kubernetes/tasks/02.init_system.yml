@@ -1,3 +1,19 @@
+# # 将ubutun24的网卡名称永久改为 eth0
+# - name: 替换 GRUB_CMDLINE_LINUX
+#   lineinfile:
+#     path: /etc/default/grub
+#     regexp: "^GRUB_CMDLINE_LINUX="
+#     line: "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
+#     state: present
+# - name: 更新 grub
+#   command: update-grub
+# - name: 重启
+#   shell: reboot
+# - name: 等待 10 秒
+#   pause:
+#     seconds: 10
+
+
 # 复制 sources.list 到 /etc/apt/sources.list
 - name: 复制 sources.list 到 /etc/apt/sources.list
   copy:
@@ -366,4 +382,6 @@
 # reboot
 - name: 重启
   shell: reboot
-  no_log: true
+- name: 等待 10 秒
+  pause:
+    seconds: 10
