@@ -5,3 +5,5 @@ ansible_install_k8s_on_ubutun24/roles/kubernetes/files/bin/**
 # 忽略 packages 目录下所有文件，保留 README.md
 ansible_install_k8s_on_ubutun24/roles/kubernetes/files/packages/**
 !ansible_install_k8s_on_ubutun24/roles/kubernetes/files/packages/README.md
+
+ansible_install_k8s_on_ubutun24/roles/kubernetes/files/scripts/cert/generate/** */
