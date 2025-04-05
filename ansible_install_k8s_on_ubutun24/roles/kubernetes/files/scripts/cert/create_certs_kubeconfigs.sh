@@ -27,6 +27,9 @@ command -v cfssljson >/dev/null 2>&1 || { echo >&2 "cfssljson is not installed. 
 command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl is not installed.  Aborting."; exit 1; }
 
 
+if [ -d ${COMMON_PREFIX} ]; then
+    mv ${COMMON_PREFIX} ${COMMON_PREFIX}-$(date +%F-%H%M%S)
+fi
 
 if [ -d ${CSR_DIR} ]; then
     rm ${CSR_DIR} -rf
