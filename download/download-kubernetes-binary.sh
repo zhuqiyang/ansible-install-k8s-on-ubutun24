@@ -13,17 +13,17 @@ rm -rf kubernetes-server-linux-amd64.tar.gz kubernetes
 
 
 if ! command -v cfssl >/dev/null 2>&1; then
-    wget -O /usr/local/bin/cfssl https://mirrors.chenby.cn/https://github.com/cloudflare/cfssl/releases/download/v1.6.4/cfssl_1.6.4_linux_amd64
+    wget -O /usr/local/bin/cfssl https://github.com/cloudflare/cfssl/releases/download/v1.6.4/cfssl_1.6.4_linux_amd64
     chmod +x /usr/local/bin/cfssl
 fi
 
 if ! command -v cfssljson >/dev/null 2>&1; then
-    wget -O /usr/local/bin/cfssljson https://mirrors.chenby.cn/https://github.com/cloudflare/cfssl/releases/download/v1.6.4/cfssljson_1.6.4_linux_amd64
+    wget -O /usr/local/bin/cfssljson https://github.com/cloudflare/cfssl/releases/download/v1.6.4/cfssljson_1.6.4_linux_amd64
     chmod +x /usr/local/bin/cfssljson
 fi
 
 
-wget  https://mirrors.chenby.cn/https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd-0.3.16.amd64.tgz
+wget  https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd-0.3.16.amd64.tgz
 tar -xf cri-dockerd-*.amd64.tgz
 mv cri-dockerd/cri-dockerd ${dir}/bin/
 rm -rf cri-dockerd-*.amd64.tgz cri-dockerd/

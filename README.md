@@ -158,6 +158,3 @@ bash 5.install_metrics-server.sh
 ```bash
 ansible-playbook -v -i inventory/kubernetes-master playbooks/kubernetes-master.yml
 ```
-
-
-
