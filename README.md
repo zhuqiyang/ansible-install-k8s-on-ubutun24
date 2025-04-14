@@ -107,7 +107,7 @@ bash -x download-kubernetes-binary.sh
 > 注意：安装过程中会重启节点，等两分钟节点启动后再次运行下面这条命令即可。
 
 ```bash
-ansible-playbook -v -i inventory/kubernetes-node playbooks/kubernetes-node.yml
+ansible-playbook -v -i inventory/kubernetes-master playbooks/kubernetes-master.yml
 ```
 
 > master节点安装完成之后，可进入到master01节点的 /root/addons 目录，目录列表如下：
@@ -157,7 +157,7 @@ bash 5.install_metrics-server.sh
 > 注意：安装过程中会重启节点，等两分钟节点启动后再次运行下面这条命令即可。
 
 ```bash
-ansible-playbook -v -i inventory/kubernetes-master playbooks/kubernetes-master.yml
+ansible-playbook -v -i inventory/kubernetes-node playbooks/kubernetes-node.yml
 ```
 > 安装完成后查看节点状态。
 ```bash
