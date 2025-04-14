@@ -1,3 +1,21 @@
+# # 复制 01-netcfg.yaml.j2 到 /etc/netplan/
+# # 打开这段注释前，先到 templates/01-netcfg.yaml.j2 中
+# # 将网关等信息修改为实际情况，这里就是临时用一下，一般不这么干。
+# - name: 复制 01-netcfg.yaml.j2 到 /etc/netplan/
+#   template:
+#     src: templates/01-netcfg.yaml.j2
+#     dest: /etc/netplan/01-netcfg.yaml
+#     mode: 0644
+#     owner: root
+#     group: root
+# # 复制 50-cloud-init.yaml 到 /etc/netplan/
+# - name: copy 50-cloud-init.yaml to /etc/netplan/
+#   copy:
+#     src: configs/50-cloud-init.yaml
+#     dest: /etc/netplan/50-cloud-init.yaml
+#     mode: 0644
+#     owner: root
+#     group: root
 # # 将ubutun24的网卡名称永久改为 eth0
 # - name: 替换 GRUB_CMDLINE_LINUX
 #   lineinfile:
@@ -66,25 +84,11 @@
   no_log: true
 
 
-# 根据 inventory/kubernetes 中的主机名设置主机名
+# 根据 inventory/kubernetes 中的配置设置主机名
 - name: 设置主机名
   hostname:
     name: "{{ inventory_hostname }}"
     use: systemd
-
-# 复制 50-cloud-init.yaml 到 /etc/netplan/
-- name: copy 50-cloud-init.yaml to /etc/netplan/
-  copy:
-    src: configs/50-cloud-init.yaml
-    dest: /etc/netplan/50-cloud-init.yaml
-    mode: 0644
-    owner: root
-    group: root
-
-- name: 重启网络 netplan apply
-  shell: netplan apply
-  no_log: true
-
 
 # 查看主机名
 - name: 查看主机名
